@@ -2010,6 +2010,11 @@ ImTextureData::~ImTextureData()
     DiscardPixels();
 }
 
+void ImTextureData::Reset()
+{
+    memset(this, 0, sizeof(*this));
+}
+
 void ImTextureData::AllocatePixels(int width, int height, ImTextureFormat format, bool clear)
 {
     DiscardPixels();
@@ -2160,6 +2165,7 @@ ImFontAtlas::~ImFontAtlas()
 {
     IM_ASSERT(!Locked && "Cannot modify a locked ImFontAtlas between NewFrame() and EndFrame/Render()!");
     Clear();
+    ClearTransientTextures();
 }
 
 void    ImFontAtlas::ClearInputData()
@@ -2222,6 +2228,23 @@ bool    ImFontAtlas::IsDirty()
     return TexDirty;
 }
 
+void    ImFontAtlas::PushTexPage()
+{
+    if (TexData.TexPixels == NULL)
+        return;
+
+    TexPages.push_back(TexData); // ImVector<> use memcpy
+    TexData.Reset();             // Reset (memset to zero) TexData, memory is now owned by copy in TexPages
+}
+
+void    ImFontAtlas::ClearTransientTextures()
+{
+    for (int i = 0; i < TexPages.Size; ++i)
+        TexPages[i].DiscardPixels();
+
+    TexPages.clear();
+}
+
 void    ImFontAtlas::GetTexDataAsAlpha8(unsigned char** out_pixels, int* out_width, int* out_height, int* out_bytes_per_pixel)
 {
     // Build atlas on demand
@@ -2249,6 +2272,21 @@ void    ImFontAtlas::GetTexDataAsRGBA32(unsigned char** out_pixels, int* out_wid
     if (out_width) *out_width = TexData.TexWidth;
     if (out_height) *out_height = TexData.TexHeight;
     if (out_bytes_per_pixel) *out_bytes_per_pixel = 4;
+}
+
+void ImFontAtlas::BuildTextureUpdateData(ImTextureUpdateData* texture_update_data)
+{
+    texture_update_data->Textures.reserve(texture_update_data->Textures.Size + TexPages.Size + 1);
+    texture_update_data->Textures.push_back(&TexData);
+    for (int i = 0; i < TexPages.Size; ++i)
+        texture_update_data->Textures.push_back(&TexPages[i]);
+}
+
+ImTextureUpdateData ImFontAtlas::GetTextureUpdateData()
+{
+    ImTextureUpdateData result;
+    BuildTextureUpdateData(&result);
+    return result;
 }
 
 ImFont* ImFontAtlas::AddFont(const ImFontConfig* font_cfg)
@@ -2950,6 +2988,8 @@ static void ImFontAtlasBuildRenderLinesTexData(ImFontAtlas* atlas)
 // Note: this is called / shared by both the stb_truetype and the FreeType builder
 void ImFontAtlasBuildInit(ImFontAtlas* atlas)
 {
+    atlas->PushTexPage();
+
     // Register texture region for mouse cursors or standard white pixels
     if (atlas->PackIdMouseCursors < 0)
     {
@@ -2996,6 +3036,7 @@ void ImFontAtlasBuildFinish(ImFontAtlas* atlas)
             atlas->Fonts[i]->BuildLookupTable();
 
     atlas->TexReady = true;
+    atlas->TexData.MarkDirty();
 }
 
 // Retrieve list of range (2 int per range, values are inclusive)

@@ -4248,6 +4248,12 @@ ImDrawData* ImGui::GetDrawData()
     return viewport->DrawDataP.Valid ? &viewport->DrawDataP : NULL;
 }
 
+ImTextureUpdateData ImGui::GetTextureUpdateData()
+{
+    ImGuiContext& g = *GImGui;
+    return g.IO.Fonts->GetTextureUpdateData();
+}
+
 double ImGui::GetTime()
 {
     return GImGui->Time;
@@ -4546,6 +4552,7 @@ void ImGui::NewFrame()
 
     // Setup current font and draw list shared data
     g.IO.Fonts->Locked = true;
+    g.IO.Fonts->ClearTransientTextures();
     SetCurrentFont(GetDefaultFont());
     IM_ASSERT(g.Font->IsLoaded());
     ImRect virtual_space(FLT_MAX, FLT_MAX, -FLT_MAX, -FLT_MAX);
