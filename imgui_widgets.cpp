@@ -532,7 +532,8 @@ bool ImGui::ButtonBehavior(const ImRect& bb, ImGuiID id, bool* out_hovered, bool
         hovered = false;
 
     // Mouse handling
-    const ImGuiID test_owner_id = (flags & ImGuiButtonFlags_NoTestKeyOwner) ? ImGuiKeyOwner_Any : id;
+    //const ImGuiID test_owner_id = (flags & ImGuiButtonFlags_NoTestKeyOwner) ? ImGuiKeyOwner_Any : id;
+    const ImGuiID test_owner_id = ImGuiKeyOwner_Any;
     if (hovered)
     {
         // Poll mouse buttons

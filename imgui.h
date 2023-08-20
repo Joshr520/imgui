@@ -20,6 +20,8 @@
 // - For first-time users having issues compiling/linking/running or issues loading fonts:
 //   please post in https://github.com/ocornut/imgui/discussions if you cannot find a solution in resources above.
 
+#pragma once
+
 // Library Version
 // (Integer encoded as XYYZZ for use in #if preprocessor conditionals, e.g. '#if IMGUI_VERSION_NUM > 12345')
 #define IMGUI_VERSION               "1.89.6 WIP"
@@ -48,8 +50,6 @@ Index of this file:
 // [SECTION] Obsolete functions and types
 
 */
-
-#pragma once
 
 // Configuration file with compile-time options
 // (edit imconfig.h or '#define IMGUI_USER_CONFIG "myfilename.h" from your build system')
